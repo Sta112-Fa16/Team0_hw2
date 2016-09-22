@@ -25,32 +25,44 @@ Use ggplot2 for any plotting questions, and dplyr for all other questions.
     a. Who threw the fastest pitch, and what was its speed?
 
 ```{r}
-
+statcast %>% arrange(desc(speed)) %>% select(pitcher,speed) %>% slice(1)
 ```
 
     b. Who threw the slowest pitch, and what was its speed?
     
 ```{r}
-
+statcast %>% arrange(desc(speed)) %>% select(pitcher,speed) %>% slice(n())
 ```
 
     c. How many different pitchers are in the dataset?
     
 ```{r}
+statcast %>% 
+  distinct(pitcher)  %>% 
+  summarise(num_pitchers = n()) 
 
+#or
+statcast %>% 
+  group_by(pitcher) %>% 
+  summarise(n = n()) %>% 
+  summarise(num_pitchers = n())
 ```
 
     d. Arrange the data by the pitches with the largest hit speed, descending. What was the pitch result of the top five?
     
 
 ```{r}
-
+statcast %>% select(hit_speed,ab_outcome) %>%
+  arrange(desc(hit_speed)) %>%
+  slice(1:5)
 ```
 
-    e. What was the farthest hit? What was its pitch type?
+    e. What was the farthest hit? Who threw it, and was the pitch type?
 
 ```{r}
-
+statcast %>% arrange(desc(hit_distance)) %>%
+  select(pitcher,hit_distance,pitch_type) %>%
+  slice(1)
 ```
 
 2. **More challenging exploration**
@@ -80,7 +92,16 @@ Use ggplot2 for any plotting questions, and dplyr for all other questions.
     a. The "strike zone" is defined to be the width of home plate (17 inches) and height from the batter's knees to the middle of his torso. This changes depending on the batter, which is why Statcast has \textit{strike\_zone\_top} and \textit{strike\_zone\_bottom}. Using dplyr's mutate() function, construct a variable titled ``\textit{in\_zone}'' which is TRUE for pitches in the strike zone and FALSE for pitches outside of the strike zone. What is the percentage of all pitches in the strike zone? (\textit{Hint: in the data,} x\_location \textit{and} z\_location \textit{are measured in feet, and} x\_location \textit{is 0 in the very middle of the strike zone}.)
     
 ```{r}
+#Width of home plate converted to feet
+sz_width = 17/12
 
+
+#Here I'm updating the statcast dataset...you may prefer to make a new dataset with the new columm instead
+statcast <- statcast %>%
+  mutate(in_zone2 = z_location <= strike_zone_top & 
+           z_location >= strike_zone_bottom &
+           x_location >= -sz_width/2 & 
+           x_location <= sz_width/2)
 ```
 
     b. What are the percentages of pitches in the strike zone grouped by pitch type? What changes do you notice? Does this change for right-handed pitchers versus left-handed pitchers?
